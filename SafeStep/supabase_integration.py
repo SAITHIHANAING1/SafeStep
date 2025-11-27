@@ -28,7 +28,7 @@ def init_supabase():
     
     url = os.environ.get('SUPABASE_URL')
     # Use anon key since it's working, fallback to service key if needed
-    key = os.environ.get('SUPABASE_KEY') or os.environ.get('SUPABASE_SERVICE_KEY')
+    key = os.environ.get('SUPABASE_SERVICE_KEY') or os.environ.get('SUPABASE_KEY') or os.environ.get('SUPABASE_ANON_KEY')
     
     print(f"🔍 Supabase URL from env: {url}")
     print(f"🔍 Supabase KEY from env: {'***' + key[-10:] if key else 'None'}")
@@ -48,14 +48,6 @@ def init_supabase():
         print("ℹ️ Supabase credentials not found, using SQLite fallback")
         return False
 
-def get_supabase_client():
-    """Get the Supabase client instance"""
-    global supabase
-    return supabase
-
-def get_supabase_client() -> Client:
-    """Get the Supabase client instance"""
-    return supabase
 
 def get_supabase_admin_client() -> Client:
     """Get the Supabase client instance (admin access)"""
