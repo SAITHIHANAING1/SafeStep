@@ -2,7 +2,7 @@
 
 A comprehensive web application for epilepsy management, featuring real-time analytics, AI-powered risk prediction, and interactive dashboards.
 
-## 🚀 Features
+## Features
 
 ### Core Analytics Dashboard
 - **Real-time KPIs**: Total incidents, seizure events, response times, high-risk cases
@@ -22,7 +22,7 @@ A comprehensive web application for epilepsy management, featuring real-time ana
 - **SQLite Fallback**: Local database for offline functionality
 - **Error Handling**: Graceful degradation with user feedback
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 - **Flask**: Python web framework
@@ -43,7 +43,7 @@ A comprehensive web application for epilepsy management, featuring real-time ana
 - **Feature Engineering**: Patient demographics, medical history, incident patterns
 - **Model Persistence**: Trained models saved locally
 
-## 📊 Analytics Features
+## Analytics Features
 
 ### Key Performance Indicators
 - Total incidents with trend analysis
@@ -62,7 +62,7 @@ A comprehensive web application for epilepsy management, featuring real-time ana
 - Location-based filtering
 - Incident type categorization
 
-## 🤖 AI Prediction Features
+## AI Prediction Features
 
 ### Risk Assessment
 - **Risk Level Classification**: Low, Medium, High, Critical
@@ -85,7 +85,7 @@ A comprehensive web application for epilepsy management, featuring real-time ana
 - **Confidence Scoring**: Model confidence for each prediction
 - **Historical Pattern Analysis**: Learning from past incidents
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Patients Table (`pwids`)
 ```sql
@@ -114,7 +114,7 @@ A comprehensive web application for epilepsy management, featuring real-time ana
 - timestamps
 ```
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -311,7 +311,7 @@ If you encounter issues:
 - **Location Distribution**: Doughnut chart of incident locations
 - **Prediction Results**: Table with ML-generated risk scores
 
-## 🤖 AI Prediction Engine
+## AI Prediction Engine
 
 ### Training the Model
 The ML model is automatically trained when:
@@ -332,7 +332,7 @@ The ML model is automatically trained when:
 - **Risk Factors**: Identified contributing factors
 - **Recommendations**: Personalized care suggestions
 
-## 🔧 API Endpoints
+## API Endpoints
 
 ### Analytics
 - `GET /api/analytics/metrics` - Get KPIs with filters
@@ -348,7 +348,7 @@ The ML model is automatically trained when:
 - `POST /logout` - User logout
 - `GET /admin/*` - Admin-only routes
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 SafeStep/
@@ -369,7 +369,7 @@ SafeStep/
     └── epilepsy_model.pkl
 ```
 
-## 🔒 Security Features
+## Security Features
 
 - **Authentication**: User login/logout system
 - **Authorization**: Role-based access control (admin/caregiver)
@@ -377,7 +377,7 @@ SafeStep/
 - **Input Validation**: Server-side data validation
 - **Error Handling**: Graceful error management
 
-## 📊 Data Sources
+## Data Sources
 
 The system uses realistic epilepsy data based on:
 - EEG datasets from Nature Scientific Data 2025
@@ -385,7 +385,7 @@ The system uses realistic epilepsy data based on:
 - Mesoscale insights in Epileptic Networks
 - SzCORE seizure detection challenge datasets
 
-## 🚀 Deployment
+## Deployment
 
 ### Local Development
 ```bash
@@ -401,7 +401,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 wsgi:app
 python app.py
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -409,11 +409,11 @@ python app.py
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## Support
 
 For support and questions:
 - Create an issue in the repository
