@@ -5,7 +5,7 @@ SAFE-Step is a Flask-based web app that helps caregivers and admins coordinate s
 
 
 
-## ✨ Features
+## Features
 
 ### Caregivers
 - Personal dashboard with quick stats (zones, incidents, training)
@@ -22,7 +22,7 @@ SAFE-Step is a Flask-based web app that helps caregivers and admins coordinate s
 
 > The top navigation adapts to the current role (admin vs caregiver).*
 
-## 🧱 Tech Stack
+## Tech Stack
 
 - **Backend:** Flask
 - **Config:** `Config` class (env-driven) with SQLAlchemy settings pre-wired
@@ -30,7 +30,7 @@ SAFE-Step is a Flask-based web app that helps caregivers and admins coordinate s
 - **Static assets:** Vanilla JS, CSS
 - **(Deps):** Flask-Login, Flask-SQLAlchemy, Flask-WTF, python-dotenv
 
-## 📁 Project Structure
+## Project Structure
 ```
 safe-step/
 ├─ app.py
@@ -57,7 +57,7 @@ safe-step/
 
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 Create a `.env` file in the SafeStep directory with the following content:
 ```env
@@ -83,7 +83,7 @@ SESSION_COOKIE_SECURE=false
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 1) **Clone & enter the project**
 ```bash
@@ -124,7 +124,7 @@ Use these demo credentials:
 - **Caregiver**: username=`demo`, password=`demo123`
 - **Caregiver**: username=`caregiver`, password=`caregiver123`
 
-## 🧭 App Routing
+## App Routing
 
 * `/` – Public landing page
 * Caregiver views: dashboard, monitor, zones, training
@@ -132,7 +132,7 @@ Use these demo credentials:
 
 > The app registers `admin` and `caregiver` blueprints in `app.py`. Make sure their packages expose `routes.py` that defines `admin_bp` and `caregiver_bp`.
 
-## 🧪 Development Notes
+## Development Notes
 ```
 ```bash
 # Using Gunicorn
@@ -143,7 +143,7 @@ python app.py
 ```
 
 
-## 🤝 Contributing
+## Contributing
 
 1. Create a feature branch
    `git checkout -b feat/short-name`
@@ -163,7 +163,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Issac**: Monitoring and Predictions
 - **Cheng Yan**: User Authentication and Management
   
-## 🆘 Support
+## Support
 
 For support and questions:
 - Create an issue in the repository
