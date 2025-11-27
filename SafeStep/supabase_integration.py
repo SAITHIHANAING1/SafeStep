@@ -49,10 +49,31 @@ def init_supabase():
         return False
 
 
-def get_supabase_admin_client() -> Client:
-    """Get the Supabase client instance (admin access)"""
+def get_supabase_client() -> Client:
+    """Get the standard Supabase client instance (Public/Anon access)"""
     return supabase
 
+# ✅ ADDED THIS FUNCTION (This fixes the Permission Error)
+def get_supabase_admin_client() -> Client:
+    """
+    Creates a dedicated connection using the SERVICE_ROLE key.
+    Use this ONLY for admin routes (creating zones, deleting users, etc).
+    """
+    url = os.environ.get('SUPABASE_URL')
+    # STRICTLY load the Service Key.
+    service_key = os.environ.get('SUPABASE_SERVICE_KEY')
+    
+    if not url or not service_key:
+        print("❌ Admin Error: SUPABASE_SERVICE_KEY is missing in .env")
+        return None
+        
+    try:
+        # Create a fresh client with full Admin privileges
+        admin_client = create_client(url, service_key)
+        return admin_client
+    except Exception as e:
+        print(f"❌ Failed to create Admin client: {e}")
+        return None
 # Remove duplicate declaration - already declared above
 
 def test_supabase_features():
