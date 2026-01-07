@@ -124,37 +124,6 @@ Use these demo credentials:
 - **Caregiver**: username=`demo`, password=`demo123`
 - **Caregiver**: username=`caregiver`, password=`caregiver123`
 
-## App Routing
-
-* `/` – Public landing page
-* Caregiver views: dashboard, monitor, zones, training
-* Admin views: dashboard, zones, users, incidents, training
-
-> The app registers `admin` and `caregiver` blueprints in `app.py`. Make sure their packages expose `routes.py` that defines `admin_bp` and `caregiver_bp`.
-
-## Development Notes
-```
-```bash
-# Using Gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 wsgi:app
-
-# Run the application
-python app.py
-```
-
-
-## Contributing
-
-1. Create a feature branch
-   `git checkout -b feat/short-name`
-2. Commit changes
-   `git commit -m "feat: add <thing>"`
-3. Push & open a PR
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Development Team
 
 - **Sai**: Dashboard and Zone Management
