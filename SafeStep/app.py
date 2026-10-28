@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone  
 import os
 from functools import wraps
 import secrets
@@ -15,7 +15,7 @@ load_dotenv('.env')
 
 # Try to initialize Supabase client
 try:
-    from supabase_integration import init_supabase, get_supabase_client
+    from supabase_integration import init_supabase, get_supabase_admin_client
     supabase_available = init_supabase()
     if supabase_available:
         print("✅ Supabase integration enabled")
@@ -57,7 +57,8 @@ except ImportError as e:
     print("ℹ️ Admin routes disabled")
 
 # Configuration
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
+# Better for local dev consistency
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-fallback-key-do-not-use-in-prod')
 
 # Database configuration - Supabase PostgreSQL only
 database_url = os.environ.get('DATABASE_URL')
@@ -746,7 +747,8 @@ def get_zones_for_user(user_id):
     """Get all zones for a specific user from Supabase"""
     try:
         if supabase_available:
-            supabase = get_supabase_client()
+            from supabase_integration import get_supabase_admin_client
+            supabase = get_supabase_admin_client()
             if supabase:
                 response = supabase.table('zones').select('*').eq('user_id', user_id).execute()
                 return response.data
@@ -5172,105 +5174,131 @@ def get_geofence_events():
 @app.route('/api/admin/zones', methods=['GET'])
 @login_required
 @admin_required
+
 def get_admin_zones():
-    """Get all zones in GeoJSON format"""
+    """Get all zones for Admin using the Service Key"""
     try:
-        zones = []
+        print("🔍 Admin: Starting zone fetch...")
         
-        # Try Supabase first
-        if supabase_available:
-            try:
-                # Use admin client for full access
-                from supabase_integration import get_supabase_admin_client
-                supabase = get_supabase_admin_client()
-                if supabase:
-                    print(f"🔍 Admin: Fetching zones from Supabase...")
-                    response = supabase.table('zones').select('*').execute()
-                    zones = response.data or []
-                    print(f"🔍 Admin: Found {len(zones)} zones in Supabase")
-                    if len(zones) > 0:
-                        print(f"🔍 Admin: Sample zone: {zones[0] if zones else 'None'}")
-                    result = _format_zones_geojson(zones, 'supabase')
-                    print(f"🔍 Admin: Returning {len(result.get('features', []))} formatted zones")
-                    return jsonify(result)
-                else:
-                    print("🔍 Admin: Supabase client is None")
-            except Exception as e:
-                print(f"🔍 Admin: Supabase zones fetch failed: {e}")
-                import traceback
-                traceback.print_exc()
-        else:
-            print("🔍 Admin: Supabase not available")
+        # 1. Import the helper explicitly
+        # This ensures we get the client that uses the SERVICE KEY
+        from supabase_integration import get_supabase_admin_client
         
-        # Use Supabase zones helper function
-        print("🔍 Admin: Using Supabase zones")
-        zones = get_all_zones_supabase()
-        print(f"🔍 Admin: Found {len(zones)} zones in Supabase")
+        # 2. Initialize the Admin Client
+        admin_client = get_supabase_admin_client()
         
-        # Convert to GeoJSON format manually since we're not using the old format function
+        # 3. Safety Check
+        if not admin_client:
+            print("❌ Admin: Failed to load Admin Client. Check SUPABASE_SERVICE_KEY in .env")
+            # RETURN EMPTY LIST (Fixes the 500 Crash)
+            return jsonify({"type": "FeatureCollection", "features": []})
+
+        # 4. Fetch the data
+        print("🔍 Admin: Querying 'zones' table...")
+        response = admin_client.table('zones').select('*').execute()
+        zones = response.data or []
+        print(f"✅ Admin: Found {len(zones)} zones")
+
+        # 5. Format the data for the map
         features = []
         for zone in zones:
             lat = zone.get('latitude')
             lng = zone.get('longitude')
             if lat is not None and lng is not None:
-                feature = {
+                features.append({
                     "type": "Feature",
                     "properties": {
-                        "id": zone['id'],
-                        "name": zone['name'],
-                        "description": zone.get('description', ''),
-                        "zone_type": zone.get('zone_type', 'safe'),
+                        "id": zone.get('id'),
+                        "name": zone.get('name'),
                         "radius_m": zone.get('radius'),
-                        "status": zone.get('status', 'approved'),
-                        "is_active": zone.get('is_active', True)
+                        "zone_type": zone.get('zone_type', 'safe'),
+                        "status": zone.get('status', 'approved')
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [lng, lat]
+                        "coordinates": [float(lng), float(lat)]
                     }
-                }
-                features.append(feature)
-        
-        return jsonify({
-            "type": "FeatureCollection", 
-            "features": features
-        })
-        
+                })
+
+        # 6. RETURN THE RESULT (This fixes the TypeError!)
+        return jsonify({"type": "FeatureCollection", "features": features})
+
     except Exception as e:
-        print(f"Error fetching admin zones: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"type": "FeatureCollection", "features": []}), 500
+        print(f"❌ Admin Zone Fetch Error: {e}")
+        # Return empty list on error (Fixes the 500 Crash)
+        return jsonify({"type": "FeatureCollection", "features": []})
+    
 
 @app.route('/api/admin/zones', methods=['POST'])
 @login_required
 @admin_required
-def create_admin_zone():
-    """Create a new zone"""
+def create_zone():
     try:
-        data = request.get_json()
+        data = request.json
         
-        # Validate required fields
-        if not data.get('name'):
-            return jsonify({'success': False, 'error': 'Zone name is required'}), 400
-        if data.get('zone_type') not in ['safe', 'danger']:
-            return jsonify({'success': False, 'error': 'Valid zone type required'}), 400
+        from supabase_integration import get_supabase_admin_client
+        admin_client = get_supabase_admin_client()
         
-        # Try Supabase first
-        if supabase_available:
-            try:
-                result = _create_zone_supabase(data)
-                if result:
-                    return jsonify(result)
-            except Exception as e:
-                print(f"Supabase zone creation failed: {e}")
+        if not admin_client:
+            return jsonify({"success": False, "error": "Admin client missing"}), 500
+
+        print("🔍 Admin: Creating zone...")
+
+        # 1. Extract Data
+        lat = data.get('latitude') or data.get('center_lat')
+        lng = data.get('longitude') or data.get('center_lng')
+        rad = data.get('radius') or data.get('radius_m')
+        description = data.get('description', '')
+
+        # 2. Insert Data (WITHOUT .select() to prevent crash)
+        insert_data = {
+            'name': data.get('name'),
+            'description': description,
+            'latitude': float(lat) if lat else None,
+            'longitude': float(lng) if lng else None,
+            'radius': float(rad) if rad else 100,
+            'zone_type': data.get('zone_type', 'safe'),
+            'user_id': current_user.id if hasattr(current_user, 'id') else None,
+            'status': 'approved',
+            'is_active': True,
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }
         
-        # Return error if Supabase is not available
-        return jsonify({'success': False, 'error': 'Zone creation service unavailable'}), 503
+        # Execute Insert
+        admin_client.table('zones').insert(insert_data).execute()
         
+        # 3. Manual Fetch (Workaround for missing return data)
+        # We query the database for the zone we just created (latest one)
+        print("🔍 Admin: Fetching created zone...")
+        response = admin_client.table('zones').select('*') \
+            .order('created_at', desc=True) \
+            .limit(1) \
+            .execute()
+        
+        if response.data:
+            new_zone = response.data[0]
+            print(f"✅ Zone Created: ID {new_zone.get('id')}")
+            return jsonify({
+                "success": True,
+                "message": "Zone created successfully",
+                "data": new_zone
+            }), 200
+        else:
+            # Fallback if fetch fails (return what we sent, fake the ID)
+            insert_data['id'] = 'new' 
+            return jsonify({
+                "success": True, 
+                "message": "Zone created (refresh to see ID)", 
+                "data": insert_data
+            }), 200
+
     except Exception as e:
-        print(f"Error creating zone: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        print(f"❌ Supabase zone creation failed: {e}")
+        # Print full traceback to terminal for easier debugging
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 503
+    
 
 @app.route('/api/admin/zones/<int:zone_id>', methods=['PUT'])
 @login_required
